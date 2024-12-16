@@ -10,8 +10,9 @@ from selenium.webdriver.chrome.options import Options
 from dotenv import load_dotenv
 import threading
 load_dotenv()
-
-driver = webdriver.Chrome(service=Service())
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+driver = webdriver.Chrome(service=Service(),options=chrome_options)
 
 account = os.getenv("ACCOUNT")
 password = os.getenv("PASSWORD")
@@ -26,12 +27,13 @@ driver.find_element(by=By.XPATH,value='//*[@id="password"]/div/div[1]/div/input'
 time.sleep(1)
 driver.find_element(by=By.XPATH,value='//*[@id="login_form"]/div[7]/div/button').click()
 time.sleep(3)
+
 try:
     button = driver.find_element(By.XPATH, '//*[@id="categoryForm"]/div[3]/div/a[2]')
-    print("element exists")
     button.click()
 except NoSuchElementException:
-    print("element not found")
+    pass
+
 time.sleep(1)
 driver.get(course_url)
 video_list  = []
@@ -41,7 +43,6 @@ for i in video_block:
     temp = i.find_elements(by=By.XPATH,value='div')
     try:
         temp1 = i.find_element(by=By.XPATH,value='div/div[4]/span')
-        print("element exists")
         continue
     except NoSuchElementException:
         pass
@@ -49,12 +50,14 @@ for i in video_block:
     for j in temp:
         if j.text.find(">") != -1:
             numbers = re.findall(r'\d+', j.text)
-            video_list.append((i,numbers[0],temp2))
+            video_list.append((i,numbers[0],temp2.text))
 
 video_href = []
+
 for i,v_time,name in video_list:
     video_href.append((i.find_element(by=By.XPATH,value='./span/div[3]/div/div[1]/div[2]/a').get_property("href"),v_time,name))
 print(video_href)
+
 def loading_video(i,v_time,name):
     chrome_options = Options()
     chrome_options.add_argument("--headless")
@@ -69,12 +72,9 @@ def loading_video(i,v_time,name):
     time.sleep(3)
     try:
         button = driver.find_element(By.XPATH, '//*[@id="categoryForm"]/div[3]/div/a[2]')
-        print("element exists")
         button.click()
     except NoSuchElementException:
-        print("element not found")
-    time.sleep(1)
-    
+        pass
     time.sleep(2)
     driver.find_element(by=By.XPATH,value='//*[@id="fsPlayer"]/div[10]/div[3]/div').click()
     time.sleep(2)
@@ -93,17 +93,12 @@ def loading_video(i,v_time,name):
         time.sleep(2) 
     print(f"{name} end")
 
-# 定義 Semaphore，最大值為 4
 semaphore = threading.Semaphore(4)
 
 def wrapped_loading_video(i, v_time, name):
     with semaphore:
-        # 執行任務
         loading_video(i, v_time, name)
 
-# 假設 video_href 是一個包含三元組的列表 [(i, v_time, name), ...]
 for i, v_time, name in video_href:
-    # 每個任務啟動一個執行緒
     thread = threading.Thread(target=wrapped_loading_video, args=(i, v_time, name))
     thread.start()
-print("All Done")
