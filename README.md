@@ -22,8 +22,7 @@ COURSE_URL=https://tms.utaipei.edu.tw/course/329  # 課程頁面的 URL
 1. **安裝依賴：**
    如果是 Python 腳本，請確保已安裝必要的套件。您可以使用以下命令安裝：
    ```bash
-   pip install selenium
-   pip install python-dotenv
+   pip install -r requirements.txt
    ```
 
 2. **設定環境變數：**
