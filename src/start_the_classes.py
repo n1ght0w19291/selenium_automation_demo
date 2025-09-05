@@ -10,32 +10,33 @@ from selenium.common.exceptions import TimeoutException
 from colorama import Fore, init
 init(autoreset=True)
 
-from utils import create_driver
+from utils import create_driver, check_current_dom, open_all_buttons, check_if_its_login, copy_cookies
 
 semaphore = threading.Semaphore(4) # control the number of concurrent video playbacks
 
-def check_current_dom(elem):
-    parent = elem.find_element(By.XPATH, '..')  # 取得父節點
-    print(parent.get_attribute('outerHTML'))
-
-    siblings = elem.find_elements(By.XPATH, 'following-sibling::*')
-    for s in siblings:
-        print(s.get_attribute('outerHTML'))
-
-
-
-def start_class(course_url):
+def start_class(driver2, course_url):
     print(Fore.WHITE + "[Info] " + "="*10 + " Start fetching video links " + "="*10)
     driver = create_driver()
     driver.get(course_url)
+
+    copy_cookies(driver2, driver)
+
+    if not check_if_its_login(driver):
+        print(Fore.RED + "[Danger] " + "Not on login page")
+        exit(1)
+
     video_list = []
+
+    open_all_buttons(driver) # test
 
     # 等待影片區塊出現
     time.sleep(3)
-    video_blocks = WebDriverWait(driver, 60).until(
+    video_blocks = WebDriverWait(driver, 10).until(
         EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.center-part > span.xtree-node-label"))
     )
     print(Fore.YELLOW + f"[Warning] Found {len(video_blocks)} video blocks")
+
+    print(Fore.BLUE + "Current blocks: " + "\n\n".join([b.get_attribute('outerHTML') for b in video_blocks[:4]]))
 
     for block in video_blocks:
         print(Fore.MAGENTA + "[Info] Waiting for video link to load...")
@@ -95,7 +96,7 @@ def loading_video(driver, v_time, name):
 
     print(f"{name} start")
     start_time = time.time()
-    max_time = int(v_time) * 30 + 60  # 加 60 秒 buffer
+    max_time = int(v_time) * 60 + 60  # 加 60 秒 buffer
 
     while True:
         elapsed_time = time.time() - start_time

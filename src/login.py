@@ -8,19 +8,24 @@ init(autoreset=True)
 def login(driver, account, password):
     driver.get("https://tms.utaipei.edu.tw/index/login")
 
-    driver.find_element(by=By.XPATH,value='//*[@id="account"]/div/div[1]/input').send_keys(account)
+    driver.find_element(By.NAME, "account").send_keys(account)
     time.sleep(1)
-    driver.find_element(by=By.XPATH,value='//*[@id="password"]/div/div[1]/div/input').send_keys(password)
+    driver.find_element(By.NAME, "password").send_keys(password)
     time.sleep(1)
-    driver.find_element(by=By.XPATH,value='//*[@id="login_form"]/div[7]/div/button').click()
+    driver.find_element(By.CSS_SELECTOR, 'button[data-role="form-submit"]').click()
     time.sleep(3)
 
     try:
-        button = driver.find_element(By.XPATH, '//*[@id="categoryForm"]/div[3]/div/a[2]')
-        button.click()
+        driver.find_element(By.CSS_SELECTOR, 'a.keepLoginBtn').click()
         print(Fore.YELLOW + "[Warning] " + "Pop up handled")
     except NoSuchElementException:
         print(Fore.RED + "[Danger] " + "No pop up")
         pass
 
+    time.sleep(3)
+    if "login" in driver.current_url:
+        print(Fore.RED + "[Danger] " + "Login failed, please check your ACCOUNT and PASSWORD in .env file")
+        exit(1)
+    else:
+        print(Fore.WHITE + "[Info] current url: " + driver.current_url)
     print(Fore.GREEN + "Login success")

@@ -10,6 +10,7 @@ init(autoreset=True)
 from login import login
 from register_class import registering_class
 from start_the_classes import start_class, start_videos
+from utils import copy_cookies
 
 load_dotenv()
 account = os.getenv("ACCOUNT")
@@ -34,7 +35,7 @@ registering_class(driver, f"https://tms.utaipei.edu.tw/course/syllabus?courseId=
 
 from start_the_classes import start_class, start_videos
 
-video_href_list = start_class(f"https://tms.utaipei.edu.tw/course/{class_code}")
+video_href_list = start_class(driver, f"https://tms.utaipei.edu.tw/course/{class_code}")
 
 # 播放影片，每個 thread 自己建立 driver
 start_videos(account, password, video_href_list)
