@@ -93,11 +93,9 @@ def loading_video(driver, v_time, name):
     max_time = math.ceil(v_time * 60) + 60  # 加 60 秒 buffer
 
     try:
-        play_btn = WebDriverWait(driver, 15).until(
-            EC.element_to_be_clickable((By.CLASS_NAME, 'fs-playBtn'))
-        )
-        play_btn.click()
-        driver.find_element(By.XPATH, '//*[@id="fsPlayer"]/div[10]/div[8]').click()
+        driver.find_element(by=By.XPATH,value='//*[@id="fsPlayer"]/div[10]/div[3]/div').click()
+        time.sleep(2)
+        driver.find_element(by=By.XPATH,value='//*[@id="fsPlayer"]/div[10]/div[8]').click()
     except Exception as e:
         print(Fore.RED + f"[Error] Cannot find video player buttons: {e}")
         return
@@ -110,6 +108,20 @@ def loading_video(driver, v_time, name):
         try:
             back = driver.find_element(By.XPATH, '//*[@id="fsPlayer"]/div[9]')
             ActionChains(driver).double_click(back).perform()
+
+            progress_bar = driver.find_element(By.CLASS_NAME, 'fs-progress-wrapper')
+            width = progress_bar.size['width']
+            ActionChains(driver).move_to_element_with_offset(progress_bar, 1, 5).click().perform()
+
+            driver.execute_script("""
+    let playPoint = document.querySelector('.fs-play-point');
+    if (playPoint) {
+        playPoint.style.left = '0%';
+        let progressPlay = document.querySelector('.fs-progress-play');
+        if(progressPlay) progressPlay.style.width = '0%';
+    }
+""")
+
             time.sleep(2)
         except Exception as e:
             print(f"[Warning] Error during video playback: {e}")
@@ -117,26 +129,23 @@ def loading_video(driver, v_time, name):
 
     print(Fore.GREEN + f"{name} end")
 
-def thread_worker(account, password, url, v_time, name):
+def thread_worker(account, password, debug_mode, url, v_time, name):
     with semaphore:  # 限制同時開啟的 thread 數量
-        driver = create_driver()
+        driver = create_driver(not debug_mode)
         driver.get("https://tms.utaipei.edu.tw/")  # 先開主頁，才能加 cookies
         login(driver, account, password)
-
-        driver.refresh()  # 套用 cookies 後刷新
         driver.get(url)   # 再去真正的課程頁
 
         loading_video(driver, v_time, name)
-        driver.execute_script("logout();")
         driver.quit()
 
-def start_videos(account, password, video_href_list):
+def start_videos(account, password, debug_mode, video_href_list):
     """
     開始多個影片播放
     """
     threads = []
     for url, v_time, name in video_href_list:
-        t = threading.Thread(target=thread_worker, args=(account, password, url, v_time, name))
+        t = threading.Thread(target=thread_worker, args=(account, password, debug_mode, url, v_time, name))
         t.start()
         threads.append(t)
 

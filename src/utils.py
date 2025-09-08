@@ -9,7 +9,7 @@ from colorama import Fore, Style, init
 init(autoreset=True)
 
 
-def create_driver(headless=True):
+def create_driver(headless=False):
     options = Options()
     if headless:
         options.add_argument("--headless")

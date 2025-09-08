@@ -44,7 +44,7 @@ while True:
     print(Fore.BLUE + "[Info] current video list: " + str(video_href_list))
     print(Fore.WHITE + "[Info] " + "=" * 10 + " Start playing videos " + "=" * 10)
 
-    start_videos(account, password, video_href_list)
+    start_videos(account, password, debug_mode, video_href_list)
 
     print(Fore.GREEN + "[Info] " + "=" * 10 + " Done！ " + "=" * 10)
 
