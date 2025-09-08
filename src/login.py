@@ -9,9 +9,7 @@ def login(driver, account, password):
     driver.get("https://tms.utaipei.edu.tw/index/login")
 
     driver.find_element(By.NAME, "account").send_keys(account)
-    time.sleep(1)
     driver.find_element(By.NAME, "password").send_keys(password)
-    time.sleep(1)
     driver.find_element(By.CSS_SELECTOR, 'button[data-role="form-submit"]').click()
     time.sleep(3)
 
@@ -21,7 +19,6 @@ def login(driver, account, password):
     except NoSuchElementException:
         print(Fore.RED + "[Danger] " + "No pop up")
         pass
-
     time.sleep(3)
     if "login" in driver.current_url:
         print(Fore.RED + "[Danger] " + "Login failed, please check your ACCOUNT and PASSWORD in .env file")

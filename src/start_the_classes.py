@@ -56,9 +56,19 @@ def start_class(driver2, course_url, debug_mode):
     print(Fore.BLUE + "Current blocks: " + "\n\n".join([b.get_attribute('outerHTML') for b in video_blocks[:4]]))
 
     for block in video_blocks:
+        try:
+            pass_condition_elem = block.find_element(By.CSS_SELECTOR, '.col-char7')
+            pass_condition_text = pass_condition_elem.text.strip()
+        except NoSuchElementException:
+            pass_condition_text = ""
+        if  re.search(r'須填寫', pass_condition_text) or \
+         re.search(r'\s*\d+\s*分及格', pass_condition_text):
+            print(Fore.YELLOW + f"[Info] Skip {block.text[:30]}... due to pass condition: {pass_condition_text}")
+            continue
+
         print(Fore.MAGENTA + "[Info] Waiting for title to load...")
         try:
-            title_elem = block.find_element(By.CSS_SELECTOR, '.node-title')
+            title_elem = block.find_element(By.CSS_SELECTOR, 'a[href^="/media/"] span.text')
             title = title_elem.text.strip()
         except NoSuchElementException:
             title = "Unknown Title"
@@ -71,21 +81,29 @@ def start_class(driver2, course_url, debug_mode):
         except NoSuchElementException:
             href = None
             print(Fore.RED + f"[Danger] No href found for {title}, skip")
-            exit(1)
-            continue  # 跳過這個影片
+            continue
         print(Fore.GREEN + f"[Success] Found video link: {href}")
 
         print(Fore.MAGENTA + "[Info] Waiting for video duration to load...")
         try:
             time_elem = block.find_element(By.CSS_SELECTOR, '.hidden-xs.pull-right .col-char7')
             time_text = time_elem.text.strip()
+            print(Fore.WHITE + f"[Info] Found time text: {time_text}")
+            minutes = 5
             if "分鐘" in time_text:
+                print(Fore.GREEN + f"[Success] Found time text: {time_text}")
                 minutes = int(re.search(r'\d+', time_text).group())
             elif "次" in time_text:
+                print(Fore.GREEN + f"[Success] Found time text: {time_text}")
                 times = int(re.search(r'\d+', time_text).group())
-                minutes = times * 5
+                minutes = times * 0.1
             else:
-                minutes = 5
+                if "分鐘" in title:
+                    minutes = int(re.search(r'\d+', title).group())
+                    print(Fore.GREEN + f"[Success] Found video duration: {minutes} min")
+                elif "次" in title:
+                    times = int(re.search(r'\d+', title).group())
+                    minutes = times * 0.1
             print(Fore.GREEN + f"[Success] Found video duration: {minutes} min")
         except NoSuchElementException:
             minutes = 5
