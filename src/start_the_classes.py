@@ -10,6 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from dotenv import load_dotenv
 from colorama import Fore, init
+import math
 init(autoreset=True)
 
 from utils import create_driver, open_all_buttons, is_logged_in
@@ -89,7 +90,7 @@ def loading_video(driver, v_time, name):
 
     print(f"{name} start - {v_time} minutes")
     start_time = time.time()
-    max_time = int(v_time) * 60 + 60  # 加 60 秒 buffer
+    max_time = math.ceil(v_time * 60) + 60  # 加 60 秒 buffer
 
     try:
         play_btn = WebDriverWait(driver, 15).until(

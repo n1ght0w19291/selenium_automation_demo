@@ -33,14 +33,19 @@ registering_class(driver, f"https://tms.utaipei.edu.tw/course/syllabus?courseId=
 if debug_mode:
     print(Fore.WHITE + "[Info] " + "=" * 10 + " Start the classes " + "=" * 10)
 
-video_href_list, driver = start_class(driver, f"https://tms.utaipei.edu.tw/course/{class_code}", debug_mode)
+while True:
 
-# if debug_mode:
-print(Fore.BLUE + "[Info] current video list: " + str(video_href_list))
-print(Fore.WHITE + "[Info] " + "=" * 10 + " Start playing videos " + "=" * 10)
+    video_href_list, driver = start_class(driver, f"https://tms.utaipei.edu.tw/course/{class_code}", debug_mode)
 
-start_videos(account, password, video_href_list)
+    if not video_href_list:
+        print(Fore.RED + "[Danger] " + "No videos to play, exiting...")
+        break
 
-print(Fore.GREEN + "[Info] " + "=" * 10 + " Done！ " + "=" * 10)
+    print(Fore.BLUE + "[Info] current video list: " + str(video_href_list))
+    print(Fore.WHITE + "[Info] " + "=" * 10 + " Start playing videos " + "=" * 10)
+
+    start_videos(account, password, video_href_list)
+
+    print(Fore.GREEN + "[Info] " + "=" * 10 + " Done！ " + "=" * 10)
 
 driver.quit()
