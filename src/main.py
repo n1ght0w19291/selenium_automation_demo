@@ -39,7 +39,6 @@ if debug_mode:
     print(Fore.BLUE + "[Info] current video list: " + str(video_href_list))
     print(Fore.WHITE + "[Info] " + "=" * 10 + " Start playing videos " + "=" * 10)
 
-# 播放影片，每個 thread 自己建立 driver
-start_videos(account, password, debug_mode, video_href_list)
+start_videos(driver, debug_mode, video_href_list)
 
 print(Fore.GREEN + "[Info] " + "=" * 10 + " Done！ " + "=" * 10)

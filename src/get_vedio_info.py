@@ -53,24 +53,20 @@ def get_vedio_time(block, title):
     except NoSuchElementException:
         pass
 
-    # 再抓 dl dt + dd
+    # 先檢查是否已通過
+    if block.find_elements(By.CSS_SELECTOR, "span.item-pass"):
+        print(Fore.GREEN + f"[Pass] {title} 已通過 ✅")
+        return 0
+
+    # 再抓通過條件 (dl dt + dd)
     try:
         dl_elem = block.find_element(By.CSS_SELECTOR, 'div.fs-description dl')
-        print(Fore.WHITE + f"[Info] Found description list")
-        print(Fore.WHITE + f"[Info] Description list HTML: {dl_elem.get_attribute('outerHTML')}")
         dt_elements = dl_elem.find_elements(By.TAG_NAME, 'dt')
-        for i, dt in enumerate(dt_elements):
-            print(Fore.WHITE + f"[Info] dt[{i}] HTML: {dt.get_attribute('outerHTML')}")
-
         dd_elements = dl_elem.find_elements(By.TAG_NAME, 'dd')
-        for i, dd in enumerate(dd_elements):
-            print(Fore.WHITE + f"[Info] dd[{i}] HTML: {dd.get_attribute('outerHTML')}")
 
         for dt, dd in zip(dt_elements, dd_elements):
             dt_text = dt.get_attribute('innerText').strip()
-            print("[" + dt_text + "]")
             if '通過條件' in dt_text:
-                print(Fore.WHITE + f"[Info] Found passing condition: {dt_text}")
                 time_text = dd.get_attribute('innerText').strip()
                 break
     except NoSuchElementException:
@@ -83,7 +79,27 @@ def get_vedio_time(block, title):
         minutes = int(re.search(r'\d+', time_text).group())
     elif "次" in time_text:
         times = int(re.search(r'\d+', time_text).group())
-        minutes = times * 0.1
+        minutes = 1 if times >= 1 else times 
 
-    print(Fore.GREEN + f"[Success] Found video duration: {minutes} min")
-    return minutes
+    # 抓已觀看時間
+    watched_minutes = 0
+    try:
+        watched_elem = block.find_element(By.CSS_SELECTOR, "a[data-url*='readTime'] span.text")
+        watched_text = watched_elem.get_attribute("innerText").strip()
+        if ":" in watched_text:  # 格式 07:07
+            m, s = map(int, watched_text.split(":"))
+            watched_minutes = m + (s // 60)
+        elif watched_text.isdigit():
+            watched_minutes = int(watched_text)
+    except NoSuchElementException:
+        pass
+
+    # 判斷是否已完成
+    if watched_minutes >= minutes:
+        print(Fore.GREEN + f"[Pass] {title} 已看完 ✅ ({watched_minutes}/{minutes} 分鐘)")
+        return 0
+
+    # 扣掉已觀看時間
+    remaining = max(minutes - watched_minutes, 0)
+    print(Fore.YELLOW + f"[Info] {title} 觀看進度: {watched_minutes}/{minutes} 分鐘，剩餘 {remaining} 分鐘")
+    return remaining
