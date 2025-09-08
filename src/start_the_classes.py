@@ -101,19 +101,6 @@ def loading_video(driver, v_time, name):
             back = driver.find_element(By.XPATH, '//*[@id="fsPlayer"]/div[9]')
             ActionChains(driver).double_click(back).perform()
 
-            progress_bar = driver.find_element(By.CLASS_NAME, 'fs-progress-wrapper')
-            width = progress_bar.size['width']
-            ActionChains(driver).move_to_element_with_offset(progress_bar, 1, 5).click().perform()
-
-            driver.execute_script("""
-    let playPoint = document.querySelector('.fs-play-point');
-    if (playPoint) {
-        playPoint.style.left = '0%';
-        let progressPlay = document.querySelector('.fs-progress-play');
-        if(progressPlay) progressPlay.style.width = '0%';
-    }
-""")
-
             time.sleep(2)
         except Exception as e:
             print(f"[Warning] Error during video playback: {e}")
