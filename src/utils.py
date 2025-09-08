@@ -5,7 +5,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 
-from colorama import Fore, Style, init
+from colorama import Fore, init
 init(autoreset=True)
 
 
@@ -18,7 +18,7 @@ def create_driver(headless=False):
     return webdriver.Chrome(service=service, options=options)
 
 def check_current_dom(elem):
-    parent = elem.find_element(By.XPATH, '..')  # 取得父節點
+    parent = elem.find_element(By.XPATH, '..')
     print(parent.get_attribute('outerHTML'))
 
     siblings = elem.find_elements(By.XPATH, 'following-sibling::*')
@@ -30,7 +30,7 @@ def open_all_buttons(driver):
     print(Fore.YELLOW + f"[Warning] Found {len(expand_buttons)} expand buttons")
     for btn in expand_buttons:
         driver.execute_script("arguments[0].click();", btn)
-        time.sleep(0.3)  # 等待 DOM 更新
+        time.sleep(0.3)
 
 def is_logged_in(driver):
     """
@@ -38,21 +38,8 @@ def is_logged_in(driver):
     """
     try:
         driver.find_element(By.XPATH, '//a[span[text()="登入"]]')
-        print("尚未登入")
+        print("Not logged in")
         return False
     except NoSuchElementException:
-        print("已經登入")
+        print("Already logged in")
         return True
-
-def copy_cookies(driver1, driver2, debug_mode):
-    """
-    Copy cookies from one driver to another
-    """
-    cookies = driver1.get_cookies()
-    for cookie in cookies:
-        if debug_mode:
-            print("[Debug] Copying cookie:", cookie)  # 檢查 domain
-        if "sameSite" in cookie:
-            cookie.pop("sameSite")  # 避免錯誤
-        driver2.add_cookie(cookie)
-    driver2.refresh()

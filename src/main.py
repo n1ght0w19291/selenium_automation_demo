@@ -1,12 +1,8 @@
 import os
-from selenium.webdriver.chrome.service import Service
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from dotenv import load_dotenv
 from colorama import Fore, init
 init(autoreset=True)
 
-# own script import
 from login import login
 from register import registering_class
 from start_the_classes import start_class, start_videos
@@ -24,10 +20,8 @@ if not account or not password or not class_code:
 
 driver = create_driver(not debug_mode)
 
-# 登入
 login(driver, account, password)
 
-# 報名課程
 registering_class(driver, f"https://tms.utaipei.edu.tw/course/syllabus?courseId={class_code}")
 
 if debug_mode:
@@ -38,7 +32,7 @@ while True:
     video_href_list, driver = start_class(driver, f"https://tms.utaipei.edu.tw/course/{class_code}", debug_mode)
 
     if not video_href_list:
-        print(Fore.RED + "[Danger] " + "No videos to play, exiting...")
+        print(Fore.GREEN + "[Info] " + "=" * 10 + " Done！ " + "=" * 10)
         break
 
     print(Fore.BLUE + "[Info] current video list: " + str(video_href_list))
@@ -46,6 +40,6 @@ while True:
 
     start_videos(account, password, debug_mode, video_href_list)
 
-    print(Fore.GREEN + "[Info] " + "=" * 10 + " Done！ " + "=" * 10)
+    print(Fore.GREEN + "=" * 20)
 
 driver.quit()

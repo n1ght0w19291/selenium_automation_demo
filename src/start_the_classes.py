@@ -1,14 +1,9 @@
-import os
 import time
 import threading
-from dotenv import load_dotenv
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
-from dotenv import load_dotenv
 from colorama import Fore, init
 import math
 init(autoreset=True)
@@ -17,7 +12,7 @@ from utils import create_driver, open_all_buttons, is_logged_in
 from get_vedio_info import need_to_skip_or_not, get_vedio_title, get_vedio_link, get_vedio_time
 from login import login
 
-semaphore = threading.Semaphore(10) # control the number of concurrent video playbacks
+semaphore = threading.Semaphore(10)
 
 def start_class(driver, course_url, debug_mode):
     print(Fore.WHITE + "[Info] " + "="*10 + " Start fetching video links " + "="*10)
@@ -48,9 +43,8 @@ def start_class(driver, course_url, debug_mode):
 
     video_list = []
 
-    open_all_buttons(driver) # test
+    open_all_buttons(driver)
 
-    # 等待影片區塊出現
     time.sleep(3)
     video_blocks = WebDriverWait(driver, 10).until(
         EC.presence_of_all_elements_located((By.CSS_SELECTOR, "div.center-part > span.xtree-node-label"))
@@ -85,12 +79,11 @@ def loading_video(driver, v_time, name):
     """
     開啟影片頁面並播放
     """
-    # 點擊影片播放器控制項
     time.sleep(2)
 
     print(f"{name} start - {v_time} minutes")
     start_time = time.time()
-    max_time = math.ceil(v_time * 60) + 60  # 加 60 秒 buffer
+    max_time = math.ceil(v_time * 60) + 60
 
     try:
         driver.find_element(by=By.XPATH,value='//*[@id="fsPlayer"]/div[10]/div[3]/div').click()
@@ -104,7 +97,6 @@ def loading_video(driver, v_time, name):
         elapsed_time = time.time() - start_time
         if elapsed_time >= max_time:
             break
-        # 持續點擊影片
         try:
             back = driver.find_element(By.XPATH, '//*[@id="fsPlayer"]/div[9]')
             ActionChains(driver).double_click(back).perform()
@@ -130,11 +122,11 @@ def loading_video(driver, v_time, name):
     print(Fore.GREEN + f"{name} end")
 
 def thread_worker(account, password, debug_mode, url, v_time, name):
-    with semaphore:  # 限制同時開啟的 thread 數量
+    with semaphore:
         driver = create_driver(not debug_mode)
-        driver.get("https://tms.utaipei.edu.tw/")  # 先開主頁，才能加 cookies
+        driver.get("https://tms.utaipei.edu.tw/")
         login(driver, account, password)
-        driver.get(url)   # 再去真正的課程頁
+        driver.get(url)
 
         loading_video(driver, v_time, name)
         driver.quit()
