@@ -83,7 +83,7 @@ def loading_video(driver, v_time, name):
 
     print(f"{name} start - {v_time} minutes")
     start_time = time.time()
-    max_time = math.ceil(v_time * 60) + 60
+    max_time = math.ceil(v_time) * 60 + 60
 
     try:
         driver.find_element(by=By.XPATH,value='//*[@id="fsPlayer"]/div[10]/div[3]/div').click()
