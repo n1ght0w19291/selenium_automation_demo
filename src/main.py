@@ -30,11 +30,17 @@ login(driver, account, password)
 # 報名課程
 registering_class(driver, f"https://tms.utaipei.edu.tw/course/syllabus?courseId={class_code}")
 
-print(Fore.WHITE + "[Info] " + "=" * 10 + " Start the classes " + "=" * 10)
+if debug_mode:
+    print(Fore.WHITE + "[Info] " + "=" * 10 + " Start the classes " + "=" * 10)
 
-video_href_list = start_class(driver, f"https://tms.utaipei.edu.tw/course/{class_code}", debug_mode)
+video_href_list, driver = start_class(driver, f"https://tms.utaipei.edu.tw/course/{class_code}", debug_mode)
 
+if debug_mode:
+    print(Fore.BLUE + "[Info] current video list: " + str(video_href_list))
+    print(Fore.WHITE + "[Info] " + "=" * 10 + " Start playing videos " + "=" * 10)
+
+exit(1)
 # 播放影片，每個 thread 自己建立 driver
 start_videos(account, password, video_href_list)
 
-print(Fore.WHITE + "[Info] " + "=" * 10 + " Done！ " + "=" * 10)
+print(Fore.GREEN + "[Info] " + "=" * 10 + " Done！ " + "=" * 10)

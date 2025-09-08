@@ -11,6 +11,7 @@ from colorama import Fore, init
 init(autoreset=True)
 
 from utils import create_driver, check_current_dom, open_all_buttons, check_if_its_login, copy_cookies
+from get_vedio_info import need_to_skip_or_not, get_vedio_title, get_vedio_link, get_vedio_time
 
 semaphore = threading.Semaphore(4) # control the number of concurrent video playbacks
 
@@ -56,60 +57,17 @@ def start_class(driver2, course_url, debug_mode):
     print(Fore.BLUE + "Current blocks: " + "\n\n".join([b.get_attribute('outerHTML') for b in video_blocks[:4]]))
 
     for block in video_blocks:
-        try:
-            pass_condition_elem = block.find_element(By.CSS_SELECTOR, '.col-char7')
-            pass_condition_text = pass_condition_elem.text.strip()
-        except NoSuchElementException:
-            pass_condition_text = ""
-        if  re.search(r'須填寫', pass_condition_text) or \
-         re.search(r'\s*\d+\s*分及格', pass_condition_text):
-            print(Fore.YELLOW + f"[Info] Skip {block.text[:30]}... due to pass condition: {pass_condition_text}")
+        skip = need_to_skip_or_not(block)
+        if skip:
             continue
 
-        print(Fore.MAGENTA + "[Info] Waiting for title to load...")
-        try:
-            title_elem = block.find_element(By.CSS_SELECTOR, 'a[href^="/media/"] span.text')
-            title = title_elem.text.strip()
-        except NoSuchElementException:
-            title = "Unknown Title"
-        print(Fore.BLUE + f"Processing video: {title}")
-
-        print(Fore.MAGENTA + "[Info] Waiting for video link to load...")
-        try:
-            link_elem = block.find_element(By.CSS_SELECTOR, 'a[href^="/media/"]')
-            href = link_elem.get_attribute("href")
-        except NoSuchElementException:
-            href = None
-            print(Fore.RED + f"[Danger] No href found for {title}, skip")
+        title = get_vedio_title(block)
+        link = get_vedio_link(block, title)
+        if not link:
             continue
-        print(Fore.GREEN + f"[Success] Found video link: {href}")
+        time = get_vedio_time(block, title)
 
-        print(Fore.MAGENTA + "[Info] Waiting for video duration to load...")
-        try:
-            time_elem = block.find_element(By.CSS_SELECTOR, '.hidden-xs.pull-right .col-char7')
-            time_text = time_elem.text.strip()
-            print(Fore.WHITE + f"[Info] Found time text: {time_text}")
-            minutes = 5
-            if "分鐘" in time_text:
-                print(Fore.GREEN + f"[Success] Found time text: {time_text}")
-                minutes = int(re.search(r'\d+', time_text).group())
-            elif "次" in time_text:
-                print(Fore.GREEN + f"[Success] Found time text: {time_text}")
-                times = int(re.search(r'\d+', time_text).group())
-                minutes = times * 0.1
-            else:
-                if "分鐘" in title:
-                    minutes = int(re.search(r'\d+', title).group())
-                    print(Fore.GREEN + f"[Success] Found video duration: {minutes} min")
-                elif "次" in title:
-                    times = int(re.search(r'\d+', title).group())
-                    minutes = times * 0.1
-            print(Fore.GREEN + f"[Success] Found video duration: {minutes} min")
-        except NoSuchElementException:
-            minutes = 5
-            print(Fore.YELLOW + f"[Warning] No time info for {title}, use default {minutes} min")
-
-        video_list.append((href, minutes, title))
+        video_list.append((link, time, title))
 
     print(Fore.WHITE + "[Info] " + "="*10 + " Fetching complete " + "="*10)
     print(Fore.YELLOW + f"[Warning] Total {len(video_list)} videos to play")
