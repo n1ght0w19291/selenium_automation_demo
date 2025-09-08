@@ -17,7 +17,7 @@ semaphore = threading.Semaphore(4) # control the number of concurrent video play
 
 def start_class(driver2, course_url, debug_mode):
     print(Fore.WHITE + "[Info] " + "="*10 + " Start fetching video links " + "="*10)
-    driver = create_driver(debug_mode)
+    driver = create_driver(not debug_mode)
     driver.get("https://tms.utaipei.edu.tw/")
     copy_cookies(driver2, driver, debug_mode)
     print(Fore.WHITE + "[Info] " + "Navigating to course page " + course_url)
@@ -65,9 +65,9 @@ def start_class(driver2, course_url, debug_mode):
         link = get_vedio_link(block, title)
         if not link:
             continue
-        time = get_vedio_time(block, title)
+        duration = get_vedio_time(block, title)
 
-        video_list.append((link, time, title))
+        video_list.append((link, duration, title))
 
     print(Fore.WHITE + "[Info] " + "="*10 + " Fetching complete " + "="*10)
     print(Fore.YELLOW + f"[Warning] Total {len(video_list)} videos to play")
