@@ -1,5 +1,3 @@
-import re
-import os
 import time
 import threading
 from selenium.webdriver.common.by import By
@@ -14,6 +12,7 @@ init(autoreset=True)
 
 from utils import create_driver, check_current_dom, open_all_buttons, check_if_its_login, copy_cookies
 from get_vedio_info import need_to_skip_or_not, get_vedio_title, get_vedio_link, get_vedio_time
+from login import login
 
 semaphore = threading.Semaphore(4) # control the number of concurrent video playbacks
 
@@ -107,26 +106,36 @@ def loading_video(driver, v_time, name):
     print(Fore.GREEN + f"{name} end")
     driver.quit()
 
-def wrapped_loading_video(driver2, url, v_time, name):
+def wrapped_loading_video(cookies, debug_mode, url, v_time, name):
     """
     用 semaphore 限制同時執行的影片數量
     """
-    load_dotenv()
-    debug_mode = os.getenv("DEBUG")
+    if "https://tms.utaipei.edu.tw/course/" not in url:
+        print(Fore.RED + "[Danger] " + f"Invalid video URL: {url}")
+        return
     with semaphore:
         driver = create_driver(not debug_mode)
+        driver.get("https://tms.utaipei.edu.tw/")
+        for cookie in cookies:
+            if "sameSite" in cookie:
+                cookie.pop("sameSite")
+            driver.add_cookie(cookie)
+        print(Fore.WHITE + "[Info] " + f"Starting video: {name} ({url}) for {v_time} minutes")
         driver.get(url)
-        copy_cookies(driver2, driver, debug_mode)
         loading_video(driver, v_time, name)
 
-
-def start_videos(driver, video_href_list):
+def start_videos(account, password, debug_mode, video_href_list):
     """
     開始多個影片播放
     """
     threads = []
+    
+    driver_main = create_driver(not debug_mode)
+    login(driver_main, account, password)
+    cookies = driver_main.get_cookies()
+    driver_main.quit()
     for url, v_time, name in video_href_list:
-        thread = threading.Thread(target=wrapped_loading_video, args=(driver, url, v_time, name))
+        thread = threading.Thread(target=wrapped_loading_video, args=(cookies, debug_mode, url, v_time, name))
         thread.start()
         threads.append(thread)
 

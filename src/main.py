@@ -16,7 +16,7 @@ load_dotenv()
 account = os.getenv("ACCOUNT")
 password = os.getenv("PASSWORD")
 class_code = os.getenv("COURSE_CODE")
-debug_mode = os.getenv("DEBUG")
+debug_mode = os.getenv("DEBUG", "False").lower() == "true"
 
 if not account or not password or not class_code:
     print(Fore.RED + "[Danger] " + "Please set ACCOUNT, PASSWORD, and COURSE_CODE in .env file")
@@ -40,6 +40,6 @@ if debug_mode:
     print(Fore.WHITE + "[Info] " + "=" * 10 + " Start playing videos " + "=" * 10)
 
 # 播放影片，每個 thread 自己建立 driver
-start_videos(driver, video_href_list)
+start_videos(account, password, debug_mode, video_href_list)
 
 print(Fore.GREEN + "[Info] " + "=" * 10 + " Done！ " + "=" * 10)
