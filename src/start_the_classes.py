@@ -1,4 +1,5 @@
 import re
+import os
 import time
 import threading
 from selenium.webdriver.common.by import By
@@ -7,6 +8,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+from dotenv import load_dotenv
 from colorama import Fore, init
 init(autoreset=True)
 
@@ -20,6 +22,7 @@ def start_class(driver2, course_url, debug_mode):
     driver = create_driver(not debug_mode)
     driver.get("https://tms.utaipei.edu.tw/")
     copy_cookies(driver2, driver, debug_mode)
+    driver2.quit()
     print(Fore.WHITE + "[Info] " + "Navigating to course page " + course_url)
     driver.get(course_url)
 
@@ -93,29 +96,37 @@ def loading_video(driver, v_time, name):
         if elapsed_time >= max_time:
             break
         # 持續點擊影片
-        back = driver.find_element(By.XPATH, '//*[@id="fsPlayer"]/div[9]')
-        action = ActionChains(driver)
-        action.double_click(back).perform()
-        time.sleep(2)
+        try:
+            back = driver.find_element(By.XPATH, '//*[@id="fsPlayer"]/div[9]')
+            ActionChains(driver).double_click(back).perform()
+            time.sleep(2)
+        except Exception as e:
+            print(f"[Warning] Error during video playback: {e}")
+
 
     print(Fore.GREEN + f"{name} end")
     driver.quit()
 
-def wrapped_loading_video(account, password, url, v_time, name):
+def wrapped_loading_video(driver2, url, v_time, name):
     """
     用 semaphore 限制同時執行的影片數量
     """
+    load_dotenv()
+    debug_mode = os.getenv("DEBUG")
     with semaphore:
-        loading_video(account, password, url, v_time, name)
+        driver = create_driver(not debug_mode)
+        driver.get(url)
+        copy_cookies(driver2, driver, debug_mode)
+        loading_video(driver, v_time, name)
 
 
-def start_videos(account, password, video_href_list):
+def start_videos(driver, video_href_list):
     """
     開始多個影片播放
     """
     threads = []
     for url, v_time, name in video_href_list:
-        thread = threading.Thread(target=wrapped_loading_video, args=(account, password, url, v_time, name))
+        thread = threading.Thread(target=wrapped_loading_video, args=(driver, url, v_time, name))
         thread.start()
         threads.append(thread)
 
