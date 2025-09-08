@@ -88,7 +88,7 @@ def get_vedio_time(block, title):
         watched_text = watched_elem.get_attribute("innerText").strip()
         if ":" in watched_text:  # 格式 07:07
             m, s = map(int, watched_text.split(":"))
-            watched_minutes = m + (s // 60)
+            watched_minutes = m + s / 60
         elif watched_text.isdigit():
             watched_minutes = int(watched_text)
     except NoSuchElementException:

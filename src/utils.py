@@ -32,7 +32,7 @@ def open_all_buttons(driver):
         driver.execute_script("arguments[0].click();", btn)
         time.sleep(0.3)  # 等待 DOM 更新
 
-def check_if_its_login(driver):
+def is_logged_in(driver):
     """
     Check if the current page is the login page
     """

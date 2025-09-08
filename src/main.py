@@ -8,9 +8,9 @@ init(autoreset=True)
 
 # own script import
 from login import login
-from register_class import registering_class
+from register import registering_class
 from start_the_classes import start_class, start_videos
-from utils import copy_cookies, create_driver
+from utils import create_driver
 
 load_dotenv()
 account = os.getenv("ACCOUNT")
@@ -35,10 +35,12 @@ if debug_mode:
 
 video_href_list, driver = start_class(driver, f"https://tms.utaipei.edu.tw/course/{class_code}", debug_mode)
 
-if debug_mode:
-    print(Fore.BLUE + "[Info] current video list: " + str(video_href_list))
-    print(Fore.WHITE + "[Info] " + "=" * 10 + " Start playing videos " + "=" * 10)
+# if debug_mode:
+print(Fore.BLUE + "[Info] current video list: " + str(video_href_list))
+print(Fore.WHITE + "[Info] " + "=" * 10 + " Start playing videos " + "=" * 10)
 
-start_videos(driver, debug_mode, video_href_list)
+start_videos(account, password, video_href_list)
 
 print(Fore.GREEN + "[Info] " + "=" * 10 + " Done！ " + "=" * 10)
+
+driver.quit()

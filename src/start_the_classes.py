@@ -1,5 +1,7 @@
+import os
 import time
 import threading
+from dotenv import load_dotenv
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
@@ -10,11 +12,11 @@ from dotenv import load_dotenv
 from colorama import Fore, init
 init(autoreset=True)
 
-from utils import create_driver, check_current_dom, open_all_buttons, check_if_its_login, copy_cookies
+from utils import create_driver, open_all_buttons, is_logged_in
 from get_vedio_info import need_to_skip_or_not, get_vedio_title, get_vedio_link, get_vedio_time
 from login import login
 
-semaphore = threading.Semaphore(3) # control the number of concurrent video playbacks
+semaphore = threading.Semaphore(10) # control the number of concurrent video playbacks
 
 def start_class(driver, course_url, debug_mode):
     print(Fore.WHITE + "[Info] " + "="*10 + " Start fetching video links " + "="*10)
@@ -39,7 +41,7 @@ def start_class(driver, course_url, debug_mode):
     else:
         print(Fore.YELLOW + "[Warning] " + "Successfully navigated to course page")
 
-    if not check_if_its_login(driver):
+    if not is_logged_in(driver):
         print(Fore.RED + "[Danger] " + "Not on login page")
         exit(1)
 
@@ -70,6 +72,7 @@ def start_class(driver, course_url, debug_mode):
 
         video_list.append((link, duration, title))
 
+    video_list.sort(key=lambda x: x[1], reverse=True)
     print(Fore.WHITE + "[Info] " + "="*10 + " Fetching complete " + "="*10)
     print(Fore.YELLOW + f"[Warning] Total {len(video_list)} videos to play")
     print(Fore.YELLOW + f"[Warning] Total video time: {total_video_time} minutes")
@@ -113,11 +116,28 @@ def loading_video(driver, v_time, name):
 
     print(Fore.GREEN + f"{name} end")
 
-def start_videos(driver, debug_mode, video_href_list):
+def thread_worker(account, password, url, v_time, name):
+    with semaphore:  # 限制同時開啟的 thread 數量
+        driver = create_driver()
+        driver.get("https://tms.utaipei.edu.tw/")  # 先開主頁，才能加 cookies
+        login(driver, account, password)
+
+        driver.refresh()  # 套用 cookies 後刷新
+        driver.get(url)   # 再去真正的課程頁
+
+        loading_video(driver, v_time, name)
+        driver.execute_script("logout();")
+        driver.quit()
+
+def start_videos(account, password, video_href_list):
     """
     開始多個影片播放
     """
+    threads = []
     for url, v_time, name in video_href_list:
-        driver.get(url)
-        loading_video(driver, v_time, name)
-    driver.quit()
+        t = threading.Thread(target=thread_worker, args=(account, password, url, v_time, name))
+        t.start()
+        threads.append(t)
+
+    for t in threads:
+        t.join()
