@@ -10,22 +10,19 @@ init(autoreset=True)
 from login import login
 from register_class import registering_class
 from start_the_classes import start_class, start_videos
-from utils import copy_cookies
+from utils import copy_cookies, create_driver
 
 load_dotenv()
 account = os.getenv("ACCOUNT")
 password = os.getenv("PASSWORD")
 class_code = os.getenv("COURSE_CODE")
+debug_mode = os.getenv("DEBUG")
 
 if not account or not password or not class_code:
     print(Fore.RED + "[Danger] " + "Please set ACCOUNT, PASSWORD, and COURSE_CODE in .env file")
     exit(1)
 
-chrome_options = Options()
-chrome_options.add_argument("--headless")
-chrome_options.add_argument("--log-level=3")  # LOG_FATAL only
-service = Service(log_path="NUL")
-driver = webdriver.Chrome(service=service, options=chrome_options)
+driver = create_driver(not debug_mode)
 
 # 登入
 login(driver, account, password)
@@ -33,9 +30,9 @@ login(driver, account, password)
 # 報名課程
 registering_class(driver, f"https://tms.utaipei.edu.tw/course/syllabus?courseId={class_code}")
 
-from start_the_classes import start_class, start_videos
+print(Fore.WHITE + "[Info] " + "=" * 10 + " Start the classes " + "=" * 10)
 
-video_href_list = start_class(driver, f"https://tms.utaipei.edu.tw/course/{class_code}")
+video_href_list = start_class(driver, f"https://tms.utaipei.edu.tw/course/{class_code}", debug_mode)
 
 # 播放影片，每個 thread 自己建立 driver
 start_videos(account, password, video_href_list)

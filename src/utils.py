@@ -44,11 +44,15 @@ def check_if_its_login(driver):
         print("已經登入")
         return True
 
-def copy_cookies(driver1, driver2):
+def copy_cookies(driver1, driver2, debug_mode):
     """
     Copy cookies from one driver to another
     """
     cookies = driver1.get_cookies()
     for cookie in cookies:
+        if debug_mode:
+            print("[Debug] Copying cookie:", cookie)  # 檢查 domain
+        if "sameSite" in cookie:
+            cookie.pop("sameSite")  # 避免錯誤
         driver2.add_cookie(cookie)
-    driver2.refresh() 
+    driver2.refresh()

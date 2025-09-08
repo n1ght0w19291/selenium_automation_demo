@@ -14,12 +14,29 @@ from utils import create_driver, check_current_dom, open_all_buttons, check_if_i
 
 semaphore = threading.Semaphore(4) # control the number of concurrent video playbacks
 
-def start_class(driver2, course_url):
+def start_class(driver2, course_url, debug_mode):
     print(Fore.WHITE + "[Info] " + "="*10 + " Start fetching video links " + "="*10)
-    driver = create_driver()
+    driver = create_driver(debug_mode)
+    driver.get("https://tms.utaipei.edu.tw/")
+    copy_cookies(driver2, driver, debug_mode)
+    print(Fore.WHITE + "[Info] " + "Navigating to course page " + course_url)
     driver.get(course_url)
 
-    copy_cookies(driver2, driver)
+    print(Fore.WHITE + "[Info] " + "current URL: " + driver.current_url)
+
+    if driver.current_url != course_url:
+        print(Fore.RED + "[Danger] " + "Failed to navigate to course page")
+        try:
+            course_link_elem = driver.find_element(By.CSS_SELECTOR, "ol.breadcrumb li:nth-child(2) a")
+            href = course_link_elem.get_attribute("href")
+            title = course_link_elem.text.strip()
+            print(Fore.WHITE + f"[Info] Found course link: {title} -> {href}")
+            driver.get(href)
+        except Exception as e:
+            print(Fore.RED + "[Error] Failed to get course link:", e)
+            exit(1)
+    else:
+        print(Fore.YELLOW + "[Warning] " + "Successfully navigated to course page")
 
     if not check_if_its_login(driver):
         print(Fore.RED + "[Danger] " + "Not on login page")
