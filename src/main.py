@@ -5,7 +5,7 @@ init(autoreset=True)
 
 from login import login
 from register import registering_class
-from start_the_classes import start_class, start_videos
+from execute import start_class, start_videos
 from utils import create_driver
 
 load_dotenv()
